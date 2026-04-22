@@ -16,6 +16,10 @@ find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Vulkan REQUIRED)
 
+# Options for Dexium
+option(DX_VK_BACKEND, "Enable Vulkan as the engine backend" ON)
+option (DX_GL_BACKEND, "Enable OpenGL as the engine backend" OFF)
+
 # Create exec with all sources
 add_executable(Dexium ${DEXIUM_SRC})
 
@@ -24,8 +28,22 @@ target_link_libraries(Dexium
     PRIVATE
         glfw
         glm::glm
-        Vulkan::Vulkan
 )
+
+# Include options
+if (DX_VK_BACKEND)
+    target_link_libraries(Dexium PRIVATE Vulkan::Vulkan)
+
+    target_compile_definitions(Dexium PUBLIC DX_VK_BACKEND=1)
+
+    message(STATUS "Vulkan backend compiled into Dexium")
+endif()
+
+if (DX_GL_BACKEND)
+    target_compile_definitions(Dexium PUBLIC DX_GL_BACKEND=1)
+
+    message(STATUS, "OpenGL backend compiled into Dexium")
+endif()
 
 #Make headers visible to IDEs
 target_include_directories(Dexium PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

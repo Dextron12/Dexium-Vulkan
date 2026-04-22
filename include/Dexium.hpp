@@ -11,6 +11,12 @@
 
 #include <core/Layer.hpp>
 
+
+// Backend specifications
+#ifdef DX_VK_BACKEND
+#include <backend/window.hpp>
+#endif
+
 namespace Dexium {
     class AppEngine {
     public:
@@ -26,6 +32,11 @@ namespace Dexium {
         // Unload the Layer and all of its associated data
         void unloadLayer(std::string_view layerName);
 
+        // Attach a new window context onto the engine
+        void attachWindow(std::unique_ptr<Backends::WindowContext> windowPtr);
+
+        Backends::WindowContext* const getWindowCtx() const;
+
         void run();
 
         void shutdown();
@@ -34,6 +45,8 @@ namespace Dexium {
         std::unordered_map<std::string, std::unique_ptr<Core::ApplicationLayer>> m_engineLayers;
 
         bool m_appState = true;
+
+        std::unique_ptr<Backends::WindowContext> m_Window = nullptr;
     };
 }
 

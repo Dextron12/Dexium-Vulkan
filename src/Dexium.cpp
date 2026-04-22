@@ -6,6 +6,7 @@
 
 #include <string>
 #include <iostream>
+#include <GLFW/glfw3.h>
 
 namespace Dexium {
     AppEngine::AppEngine() {
@@ -82,9 +83,20 @@ namespace Dexium {
         }
     }
 
+
+    Backends::WindowContext* const AppEngine::getWindowCtx() const {
+        return m_Window.get();
+    }
+
     void AppEngine::run() {
+        if (m_Window == nullptr) {
+            std::cout << "No Window found!" << std::endl;
+            return;
+        }
+
         while (m_appState) {
             //Itertate through the layers and execute them
+            glfwPollEvents();
 
             int activeLayerCount = 0; // Increments for every active layer
             for (const auto& [layerName, ptr] : m_engineLayers) {
@@ -100,7 +112,6 @@ namespace Dexium {
             if (m_engineLayers.empty() || activeLayerCount == 0) {
                 // shutdown engine loop
                 std::cout << "No Active layers to execute within the Engine. Shutting down!" << std::endl;
-                m_appState = false;
                 shutdown(); // Engine::shutdown being called (Not layer)
             }
         }
@@ -114,6 +125,17 @@ namespace Dexium {
             if (appState.isRunning || appState.isPaused) {
                 ptr->onShutdown();
             }
+            if (m_Window != nullptr) {
+                if (glfwWindowShouldClose(m_Window->window)) {
+                    ptr->onShutdown();
+                }
+            }
         }
+
+        m_appState = false;
+    }
+
+    void AppEngine::attachWindow(std::unique_ptr<Backends::WindowContext> windowPtr) {
+        m_Window = std::move(windowPtr);
     }
 }
