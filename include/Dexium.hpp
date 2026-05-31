@@ -9,7 +9,10 @@
 #include <memory>
 #include <unordered_map>
 
+#include <core/VFS.hpp>
+
 #include <core/Layer.hpp>
+
 
 
 // Backend specifications
@@ -35,7 +38,7 @@ namespace Dexium {
         // Attach a new window context onto the engine
         void attachWindow(std::unique_ptr<Backends::WindowContext> windowPtr);
 
-        Backends::WindowContext* const getWindowCtx() const;
+        Backends::WindowContext* getWindowCtx() const;
 
         void run();
 

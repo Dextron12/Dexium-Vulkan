@@ -1,3 +1,20 @@
-# Project/IDE files
+# IDE files
 .idea/
+
+# Ignore script files
+*.sh
+*.bat
+
+# Ignore all Test Applications
+Test_Application/**
+
+# Ignore all noes/ & docs/ folders they are used as raw/internal documentation on the dev end
+notes/
+docs/
+
+# Ignore compiled SPIR-V/GLSL/Slang shaders
+*.spv
+*.glsl
+
+
 

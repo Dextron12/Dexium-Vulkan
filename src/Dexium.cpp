@@ -84,7 +84,7 @@ namespace Dexium {
     }
 
 
-    Backends::WindowContext* const AppEngine::getWindowCtx() const {
+    Backends::WindowContext* AppEngine::getWindowCtx() const {
         return m_Window.get();
     }
 
@@ -112,17 +112,24 @@ namespace Dexium {
             if (m_engineLayers.empty() || activeLayerCount == 0) {
                 // shutdown engine loop
                 std::cout << "No Active layers to execute within the Engine. Shutting down!" << std::endl;
-                shutdown(); // Engine::shutdown being called (Not layer)
+                //shutdown(); // Engine::shutdown being called (Not layer)
+                m_appState = false;
+                break;
             }
         }
+        shutdown();
     }
 
     void AppEngine::shutdown() {
+        m_appState = false;
         // Iterate through the running layers and shut them down
         for (const auto& [layerName, ptr] : m_engineLayers) {
             const auto& appState = ptr->AppState;
 
             if (appState.isRunning || appState.isPaused) {
+                ptr->AppState.isRunning = false;
+                ptr->AppState.isPaused = false;
+
                 ptr->onShutdown();
             }
             if (m_Window != nullptr) {
@@ -131,8 +138,6 @@ namespace Dexium {
                 }
             }
         }
-
-        m_appState = false;
     }
 
     void AppEngine::attachWindow(std::unique_ptr<Backends::WindowContext> windowPtr) {
