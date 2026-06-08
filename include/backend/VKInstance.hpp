@@ -5,6 +5,21 @@
 #ifndef DEXIUM_VKINSTANCE_HPP
 #define DEXIUM_VKINSTANCE_HPP
 
+#include <vulkan/vulkan.hpp>
+
+#include <memory>
+
+
+// The Vk debug fn used with VK valiation layers
+#if defined (DX_LayerFeatures)
+namespace Dexium::Vulkan {
+    VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
+        vk::DebugUtilsMessageTypeFlagsEXT type,
+        const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+        void* pUserData);
+}
+#endif
+
 namespace Dexium::Core {
 
     struct VersionControl {
@@ -36,16 +51,25 @@ namespace Dexium::Core {
 }
 
 namespace Dexium::Vulkan {
+
+    class VkSurfaceStructure
+
     class VkInstance {
     public:
-        VkInstance(const Core::DxApplicationInfo& DXAppInfo);
+        VkInstance(Core::DxApplicationInfo& DXAppInfo);
         ~VkInstance();
 
+        // Need to move into dtor to avoid double frees
         void destroyInstance();
+
+        // Gets the required instance extensions from GLFW
+        std::vector<const char*> getRequiredInstanceExtensions();
 
         Core::VersionControl VkDynamicVersion;
 
-        vk::detail::DynamicLoader loader;
+        // Needs to be heap-allocated so memory stays in one place
+        // Newver versions also explicitly delete copy & move operators on this struct
+        std::unique_ptr<vk::detail::DynamicLoader> loader = nullptr;
 
         vk::Instance instance = nullptr;
 

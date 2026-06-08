@@ -9,9 +9,20 @@
 #include <memory>
 #include <unordered_map>
 
+
+// Engine Utils:
+#include <core/Error.hpp>
 #include <core/VFS.hpp>
 
+// Engine API
 #include <core/Layer.hpp>
+
+// Rendering (Backend) API
+#ifdef DX_VK_BACKEND
+#include <backend/VKInstance.hpp>
+#else
+#error "DX_VK_BACKEND disabled, No other backends currently supported!"
+#endif
 
 
 
