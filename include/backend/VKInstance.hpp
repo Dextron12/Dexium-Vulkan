@@ -52,7 +52,7 @@ namespace Dexium::Core {
 
 namespace Dexium::Vulkan {
 
-    class VkSurfaceStructure
+    //class VkSurfaceStructure
 
     class VkInstance {
     public:
@@ -63,7 +63,7 @@ namespace Dexium::Vulkan {
         void destroyInstance();
 
         // Gets the required instance extensions from GLFW
-        std::vector<const char*> getRequiredInstanceExtensions();
+        static std::vector<const char*> getRequiredInstanceExtensions();
 
         Core::VersionControl VkDynamicVersion;
 
@@ -78,6 +78,12 @@ namespace Dexium::Vulkan {
     private:
         vk::ApplicationInfo appInfo;
     };
+
+    // Checks if the Vk implementation offers the suer-requested layers & configures debug information for the engine
+    vk::DebugUtilsMessengerCreateInfoEXT enumerateLayers_CreateDebugInfo(Core::DxApplicationInfo* appInfo);
+
+    // Checks if the Vk implementation can support all requested extensions from GLFW
+    const std::vector<const char*> enumerateInstanceExtensions();
 }
 
 #endif //DEXIUM_VKINSTANCE_HPP

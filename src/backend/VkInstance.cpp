@@ -54,50 +54,8 @@ namespace Dexium::Vulkan {
 
         VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 
-        // DebugInfo to store any vlaidation layers & accessor to the debug callback
-        vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-
-        // May be empty if layers are NOT in use. ALso used to parse information about use of layers to isntance creation
-        auto& validationLayers = DXAppInfo.requestLayerFeatures;
-#ifdef DX_LayerFeatures
-        // Check if validation layers are enabled (if so, ensure the KHRONOS valdiaiton layer is added to the vector)
-        if (std::none_of(validationLayers.begin(), validationLayers.end(),
-            [](const char* layer)
-            {
-                return std::string_view(layer) == "VK_LAYER_KHRONOS_validation"; // Check if this exists within the vector
-            })) {
-
-            validationLayers.push_back("VK_LAYER_KHRONOS_validation"); // Layer NOT found, inserting it!
-        }
-
-        // Beg Vk for supoported valdiation layers
-        const auto availableLayers = vk::enumerateInstanceLayerProperties();
-
-        // Check that requested layers are supported by HOSt impllementation
-        for (const char* reqLayer : validationLayers) {
-            if (std::none_of(availableLayers.begin(), availableLayers.end(),
-                [reqLayer](const vk::LayerProperties& layer)
-                {
-                    return std::string_view(layer.layerName) == reqLayer;
-                })) {
-                // Layer not supported(WARN)
-                TraceLog(Core::LogLevel::WARN, "[VK_VALIDATION_LAYERS]: {} is not a supported layer in the current VK-Implementation. It will be ignored", reqLayer);
-            }
-        }
-
-        // Populate the debug info or validation layers
-        debugCreateInfo = vk::DebugUtilsMessengerCreateInfoEXT{
-            {},
-            vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
-            vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
-            vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
-            vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
-            vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
-            &Dexium::Vulkan::debugCallback
-        };
-
-
-#endif
+        // Check support for requested validation layers & configure debug callback for layers
+        auto debugCreateInfo = enumerateLayers_CreateDebugInfo(&DXAppInfo);
 
         // Fetch requested extensions from GLFW
         const auto& requiredExtensions = getRequiredInstanceExtensions();
@@ -128,6 +86,9 @@ namespace Dexium::Vulkan {
         TraceLog(Core::LogLevel::TRACE, "Loading {} extensions", std::to_string(supportedCount));
 
 
+        // Ref for validationLayers (after enumerateLayers_CreateDebugInfo is called, since it modifies the DXAppInfo vec)
+        auto& validationLayers = DXAppInfo.requestLayerFeatures;
+
         // Create a Vulkan Instance
         vk::InstanceCreateInfo instanceCreateInfo{};
         instanceCreateInfo.pApplicationInfo = &appInfo;
@@ -150,6 +111,23 @@ namespace Dexium::Vulkan {
 
     }
 
+    std::vector<const char*> VkInstance::getRequiredInstanceExtensions() {
+        uint32_t glfwExtensionCount = 0;
+        auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        // Convert const char* to vector
+        std::vector extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+        // Add debug mesg callback extensions if validation layers are in use
+#ifdef DX_LayerFeatures
+        extensions.push_back(vk::EXTDebugUtilsExtensionName);
+#endif
+
+        TraceLog(Core::LogLevel::TRACE, "GLFW requested {} extenions", std::to_string(glfwExtensionCount));
+
+        return extensions;
+    }
+
     VkInstance::~VkInstance() {
         destroyInstance();
     }
@@ -163,8 +141,6 @@ namespace Dexium::Vulkan {
 }
 
 
-// The Vk debug fn used with VK valiation layers
-#if defined (DX_LayerFeatures)
 namespace Dexium::Vulkan {
     VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
         vk::DebugUtilsMessageTypeFlagsEXT type,
@@ -205,21 +181,91 @@ namespace Dexium::Vulkan {
         return VK_FALSE;
     }
 
-    std::vector<const char*> VkInstance::getRequiredInstanceExtensions() {
-        uint32_t glfwExtensionCount = 0;
-        auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    vk::DebugUtilsMessengerCreateInfoEXT enumerateLayers_CreateDebugInfo(Core::DxApplicationInfo* appInfo) {
+        // Get the user-requested validation layers
+        auto& validationLayers = appInfo->requestLayerFeatures;
 
-        // Convert const char* to vector
-        std::vector extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-        // Add debug mesg callback extensions if validation layers are in use
+        // Because the vec within DXAppInfo can be empty(no user-requested layers) and we expose the amcro DX_LayerFeatures,
+        // we need to check if the VK_LAYER_KHRONOS_valdiation is in the vec or add it if the amcro layer is enabled:
 #ifdef DX_LayerFeatures
-        extensions.push_back(vk::EXTDebugUtilsExtensionName);
+        if (std::none_of(validationLayers.begin(), validationLayers.end(),
+            [](const char* layer)
+            {
+                return std::string_view(layer) == "VK_LAYER_KHRONOS_validation";
+            })) {
+
+            validationLayers.push_back("VK_LAYER_KHRONOS_validation"); // Manually insert request to sue KHR valdiaiton layer
+        }
+
+        // Request available supported layers from the VK instance
+        const auto availableLayers = vk::enumerateInstanceLayerProperties();
+
+        // Check that all requested layers are supported by the VK impl
+        //for (const char* reqLayer : validationLayers) {
+        for (auto it = validationLayers.begin(); it != validationLayers.end(); ) {
+            auto reqLayer = *it;
+            if (std::none_of(availableLayers.begin(), availableLayers.end(),
+                [reqLayer](const vk::LayerProperties& layer)
+                {
+                    return std::string_view(layer.layerName) == reqLayer;
+                    //return std::strcmp(layer.layerName, reqLayer);
+                })) {
+                // Layer not supported. WARN:
+                TraceLog(Core::LogLevel::WARN, "[VK_VALIDATION_LAYERS]: {} is an unsupported layer by your host implementation", reqLayer);
+                // We pass the same vector to VkInstanceCreateInfo, so we need to remvoe any unsupported layers
+                it = validationLayers.erase(it);
+            } else {
+                ++it; // only advance when not removing an unsupported layer
+            }
+        }
 #endif
 
-        TraceLog(Core::LogLevel::TRACE, "GLFW requested {} extenions", std::to_string(glfwExtensionCount));
+        // Provide debug info for the validation layers to use TraceLog
+        // the free fn Dexium::Vulkan::debugCallback is a callback fn that re-routes all VK logging messages to TraceLog
 
-        return extensions;
+         auto debugMessenger = vk::DebugUtilsMessengerCreateInfoEXT{
+            {},
+            vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+            vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
+            vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+            vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
+            vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
+            &Dexium::Vulkan::debugCallback // THe TraceLog callback fn
+        };
+
+        return debugMessenger;
+    }
+
+    const std::vector<const char*> enumerateInstanceExtensions() {
+        // Check the required extensions from GLFW(no need for the window interface to do so)
+        auto& requiredExtensions = VkInstance::getRequiredInstanceExtensions();
+
+        // Get all supported extenions by the Vk impl
+        auto extensionProperties = vk::enumerateInstanceExtensionProperties();
+
+        std::unordered_set<std::string_view> availableExtensions;
+        availableExtensions.reserve(extensionProperties.size());
+
+        for (auto const& ext : extensionProperties) {
+            availableExtensions.emplace(ext.extensionName);
+        }
+        size_t unsupportedCount = 0;
+        size_t supportedCount = 0;
+
+        //for (auto const& required : requiredExtensions) {
+        for (auto it = requiredExtensions.begin(); it != requiredExtensions.end(); ) {
+            auto required = *it;
+            if (availableExtensions.find(required) != availableExtensions.end()) {
+                ++supportedCount;
+                //Update iter when nothing to erase.... this feels really dodgy
+                ++it;
+            } else {
+                ++unsupportedCount;
+                TraceLog(Core::LogLevel::WARN, "[VkInstance]: The requested extension: {} is unsupported by the Vk implementation", required);
+                it = requiredExtensions.erase(it);
+            }
+        }
+
+        TraceLog(Core::LogLevel::TRACE, "Loading {} extensions", std::to_string(supportedCount));
     }
 }
-#endif
