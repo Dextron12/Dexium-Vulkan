@@ -9,7 +9,7 @@
 #include <unordered_set>
 #include <vulkan/vulkan.hpp>
 
-// Create global dispatcher (Must be doen once in a single target/.cpp file)
+// Create global dispatcher (Must be done once in a single target/.cpp file)
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 
@@ -54,8 +54,13 @@ namespace Dexium::Vulkan {
 
         VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 
+        VkPhysicalDeviceFeatures2 devFeatures;
+        devFeatures.features.fillModeNonSolid = true;
+
         // Check support for requested validation layers & configure debug callback for layers
         auto debugCreateInfo = enumerateLayers_CreateDebugInfo(&DXAppInfo);
+
+        vk::DeviceCreateInfo deviceCreateInfo{}
 
         // Fetch requested extensions from GLFW
         const auto& requiredExtensions = getRequiredInstanceExtensions();
@@ -63,28 +68,8 @@ namespace Dexium::Vulkan {
         // Check if the GLFW required extenions are supported by the Vk implementation
         auto extensionProperties = vk::enumerateInstanceExtensionProperties();
 
-        std::unordered_set<std::string_view> availableExtensions;
-        availableExtensions.reserve(extensionProperties.size());
-
-        for (auto const& ext : extensionProperties) {
-            availableExtensions.emplace(ext.extensionName);
-        }
-
-        size_t unsupportedCount = 0;
-        size_t supportedCount = 0;
-
-        for (auto const& required : requiredExtensions) {
-            if (availableExtensions.find(required) != availableExtensions.end()) {
-                ++supportedCount;
-            } else {
-                ++unsupportedCount;
-                // WARN: For unsupported extension
-                TraceLog(Core::LogLevel::WARN, "[VkInstance]: The requested GLFW extension: {}, is unsupported by your Vk implementation!", required);
-            }
-        }
-
-        TraceLog(Core::LogLevel::TRACE, "Loading {} extensions", std::to_string(supportedCount));
-
+        // Check if the Vk instance suppports all requested extensions:
+        enumerateInstanceExtensions();
 
         // Ref for validationLayers (after enumerateLayers_CreateDebugInfo is called, since it modifies the DXAppInfo vec)
         auto& validationLayers = DXAppInfo.requestLayerFeatures;
