@@ -238,7 +238,7 @@ namespace Dexium::Vulkan {
 
     const std::vector<const char*> enumerateInstanceExtensions() {
         // Check the required extensions from GLFW(no need for the window interface to do so)
-        auto& requiredExtensions = VkInstance::getRequiredInstanceExtensions();
+        auto requiredExtensions = VkInstance::getRequiredInstanceExtensions();
 
         // Get all supported extenions by the Vk impl
         auto extensionProperties = vk::enumerateInstanceExtensionProperties();
@@ -267,5 +267,7 @@ namespace Dexium::Vulkan {
         }
 
         TraceLog(Core::LogLevel::TRACE, "Loading {} extensions", std::to_string(supportedCount));
+
+        return requiredExtensions;
     }
 }
