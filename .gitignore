@@ -1,5 +1,7 @@
 # IDE files
 .idea/
+.vscode/
+build/
 
 # Ignore script files
 *.sh
@@ -15,6 +17,10 @@ docs/
 # Ignore compiled SPIR-V/GLSL/Slang shaders
 *.spv
 *.glsl
+
+# Ignore project files
+*.xml
+*.exe
 
 
 
