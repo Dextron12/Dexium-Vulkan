@@ -108,7 +108,7 @@ std::filesystem::path VFS::resolve(const std::filesystem::path& relPath) {
         try {
             res = std::filesystem::canonical(res);
         } catch (const std::exception& ex) {
-            TraceLog(Dexium::Core::LogLevel::WARN, "Failed to canonically resolve the path: '{}'\nEnsure the working directory is up-to-date!\nException(): {}", res.c_str(), ex.what());
+            //TraceLog(Dexium::Core::LogLevel::WARN, "Failed to canonically resolve the path: '{}'\nException(): {}", res.c_str(), ex.what());
         }
     }
 
