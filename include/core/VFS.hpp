@@ -21,7 +21,7 @@ public:
     const std::filesystem::path& getExecPath();
 
     // Take a relative path and attempt to resolve it into an absolute path. Fails if the relative path cannot be found.
-    std::filesystem::path resolve(const std::filesystem::path& relPath);
+    std::filesystem::path resolve(const std::filesystem::path& relPath) const;
 
     static bool exists(const std::filesystem::path& path);
 

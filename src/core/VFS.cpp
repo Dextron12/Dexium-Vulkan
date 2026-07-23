@@ -79,7 +79,7 @@ bool VFS::exists(const std::filesystem::path& path) {
     return false;
 }
 
-std::filesystem::path VFS::resolve(const std::filesystem::path& relPath) {
+std::filesystem::path VFS::resolve(const std::filesystem::path& relPath) const {
     if (relPath.empty()) return std::filesystem::path();
 
     std::filesystem::path res;
@@ -107,6 +107,7 @@ std::filesystem::path VFS::resolve(const std::filesystem::path& relPath) {
         // Try resolve suing canonical apthr esolution
         try {
             res = std::filesystem::canonical(res);
+            return res;
         } catch (const std::exception& ex) {
             //TraceLog(Dexium::Core::LogLevel::WARN, "Failed to canonically resolve the path: '{}'\nException(): {}", res.c_str(), ex.what());
         }
