@@ -33,7 +33,7 @@ VFS::VFS() {
 
 }
 
-std::filesystem::path VFS::getWorkingPath() {
+std::filesystem::path VFS::getWorkingPath() const {
     if (m_workingPath.empty()) {
         TraceLog(Dexium::Core::LogLevel::WARN, "Working path is not provided! Please manually update the working path!");
         return std::filesystem::path();
@@ -67,7 +67,7 @@ bool VFS::updateWorkingPath(std::string_view path) {
     return updateWorkingPath(std::filesystem::path(path));
 }
 
-const std::filesystem::path& VFS::getExecPath() {
+const std::filesystem::path& VFS::getExecPath() const {
     return m_execPath;
 }
 

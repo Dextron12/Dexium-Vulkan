@@ -20,7 +20,6 @@ find_package(fmt REQUIRED)
 # Options for Dexium
 # -- Rendering Backend Options --
 option(DX_VK_BACKEND "Enable Vulkan as the engine backend" ON)
-option (DX_GL_BACKEND "Enable OpenGL as the engine backend" OFF) # Deprecating OpenGL from the framework!!
 
 # Enable Vulkan validation layer support. Vk layers are great when debugging Vk issues, enabling this diverts issues into a configured ErrorLogger
 option(DX_LayerFeatures "Enable Vulkan layers & reporting back to a configured ErrorLogger" ON)
@@ -28,17 +27,30 @@ option(DX_LayerFeatures "Enable Vulkan layers & reporting back to a configured E
 # Enable/Disable Message logging features
 option(DX_ErrorLogging "Enable Error Logging support throughout the engine" ON)
 
+# Build tinyxml2 lib for tooling and project interface (Cannot read xml file otherwise)
+option(DX_USE_XML "Build tinyxml2 as a internal library that can be used for tooling features" OFF)
+
+# -- Developer tools options --
+# --
+# -- VkGenerator
+option(DX_TOOL_VkGenerator " Build the CLI tool to compile a header script containing Vulkan structure metadata" ON)
+
+
 # -- Test Application Compilation --
 option(DX_TEST_APPLICATION "Build the Dexium Engine test application" ON)
 
 
-# Msg for end-users: If compiling in debug mode and DX_LayerFeatures are disabled, nudge them otehrwise!
+# Msg for end-users: If compiling in debug mode and DX_LayerFeatures are disabled, nudge them otherwise!
 if (NOT DX_LayerFeatures AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(WARNING "DX_LayerFeatures are disabled but engine compiled in debug mode. Be aware this may affect Vulkan state tracking and error logging.")
 endif()
 
 # Create lib with all sources
 add_library(Dexium STATIC ${DEXIUM_SRC})
+
+#Make headers visible to IDEs
+target_include_directories(Dexium PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 
 # Link libraries
 target_link_libraries(Dexium
@@ -57,30 +69,31 @@ if (DX_VK_BACKEND)
     message(STATUS "Vulkan backend compiled into Dexium")
 endif()
 
-if (DX_GL_BACKEND)
-    target_compile_definitions(Dexium PUBLIC DX_GL_BACKEND=1)
-
-    message(STATUS "OpenGL backend compiled into Dexium")
-endif()
-
 if (DX_LayerFeatures)
     target_compile_definitions(Dexium PUBLIC DX_LayerFeatures=1)
     message(STATUS "Vulkan Layer Features are enabled")
 endif()
 
 if (DX_ErrorLogging)
-    target_compile_definitions(Dexium PUBLIC DX_ErrorLogging)
+    target_compile_definitions(Dexium PUBLIC DX_ErrorLogging=1)
     message(STATUS "Message logging and output enabled")
 endif()
 
+if (DX_USE_XML)
+    add_subdirectory(3rd_party/tinyxml2)
+    target_compile_definitions(Dexium PUBLIC DX_USE_XML=1)
+    target_link_libraries(Dexium PUBLIC tinyxml2)
+endif()
 
+
+# Optionally compile dev tools
+if (DX_TOOL_VkGenerator)
+    add_subdirectory(tools/VkGenerator)
+    message("Compiling VkGenerator CLI")
+endif()
 
 # OPTIONALLY compile the Test application found in ./Test_Application
 if (DX_TEST_APPLICATION)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Test_Application)
     message(STATUS "Compiling Test Application")
 endif()
-
-
-#Make headers visible to IDEs
-target_include_directories(Dexium PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

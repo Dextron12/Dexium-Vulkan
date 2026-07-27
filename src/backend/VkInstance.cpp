@@ -60,8 +60,6 @@ namespace Dexium::Vulkan {
         // Check support for requested validation layers & configure debug callback for layers
         auto debugCreateInfo = enumerateLayers_CreateDebugInfo(&DXAppInfo);
 
-        vk::DeviceCreateInfo deviceCreateInfo{}
-
         // Fetch requested extensions from GLFW
         const auto& requiredExtensions = getRequiredInstanceExtensions();
 

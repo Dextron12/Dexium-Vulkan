@@ -13,12 +13,12 @@ class VFS {
 public:
     VFS();
 
-    std::filesystem::path getWorkingPath();
+    std::filesystem::path getWorkingPath() const;
     bool updateWorkingPath(std::filesystem::path path);
     bool updateWorkingPath(std::string_view path);
 
     // Returns an immutable path to the execPath(Including the execName).
-    const std::filesystem::path& getExecPath();
+    const std::filesystem::path& getExecPath() const;
 
     // Take a relative path and attempt to resolve it into an absolute path. Fails if the relative path cannot be found.
     std::filesystem::path resolve(const std::filesystem::path& relPath) const;

@@ -13,7 +13,25 @@
 #include <optional>
 #include <unordered_map>
 
+namespace Dexium::Vulkan::detail {
+
+    // Provides const-expression lists of used Vulkans tructs, inclduing their member name & bit offset
+
+    struct FeatureInfo {
+        const char* name;
+        std::size_t offset;
+    };
+
+    /*constexpr std::array<FeatureInfo, 3> Vulkan10FeatureInfo{
+        {"robustBufferAccess", offsetof(VkPhysicalDeviceFeatures, robustBufferAccess)},
+        {"fullDrawIndexUint32", offsetof(VkPhysicalDeviceFeatures, fullDrawIndexUint32)},
+        {"imageCubeArray", offsetof(VkPhysicalDeviceFeatures, imageCubeArray)},
+    };*/
+}
+
 namespace Dexium::Vulkan {
+
+
 
     // Automatically selects most suitable physical device and creates the logical device.
     class Device {

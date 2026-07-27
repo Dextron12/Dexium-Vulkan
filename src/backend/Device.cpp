@@ -8,6 +8,8 @@
 
 #include <vulkan/vk_enum_string_helper.h> // Provides string_enum(enum value), to stringify pesky Vk enums!
 
+#include <vulkan/vulkan.h>
+
 namespace Dexium::Vulkan {
 
     // INVARIANT: Assumes that VkPhysicalDeviceFeatures2 is always the head
@@ -46,7 +48,7 @@ namespace Dexium::Vulkan {
     }
 
 
-    std::vector<VkPhysicalDevice> Device::queryDevices(const VkInstance& instance) {
+    /*std::vector<VkPhysicalDevice> Device::queryDevices(const VkInstance& instance) {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -64,20 +66,72 @@ namespace Dexium::Vulkan {
         }
 
         return devices;
-    }
+    }*/
 
     std::vector<VkPhysicalDevice> Device::minDeviceRequirements(VkInstance& instance, DeviceFeatureSet& reqFeatures) {
-        auto featureQuery = queryDevices(instance);
+        //auto featureQuery = queryDevices(instance);
 
-        for (auto d : featureQuery) {
-            d.getFeatures
+        auto deviceQuery = queryDevices(instance);
+
+        if (deviceQuery.empty()) {
+            TraceLog(Core::LogLevel::WARN, "[VkDevice]: No physical devices detected!");
+            return std::vector<VkPhysicalDevice>();
         }
 
-        // Check for required compatability, remove device from lsit if unsupported:
-        for (auto device = featureQuery.begin(); device != featureQuery.end(); ) {
 
-            auto availableFeatures = device;
+        for (auto device = deviceQuery.begin(); device != deviceQuery.end(); ) {
+            DeviceFeatureSet deviceSupport{};
+
+            // My love-hate relationship for Vulkan si best described by the implementation of StructureChains...
+            deviceSupport.vulkan14Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES;
+
+            // Define & link 1_3_FEATURES to 1_4 features
+            deviceSupport.vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+            deviceSupport.vulkan13Features.pNext = &deviceSupport.vulkan14Features;
+
+            // Define & link 1_2 FEATURES to 1_3 FEATURES
+            deviceSupport.vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+            deviceSupport.vulkan12Features.pNext = &deviceSupport.vulkan13Features;
+
+            // Define & link 1_1 FEATURES to 1_2 FEATURES
+            deviceSupport.vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+            deviceSupport.vulkan11Features.pNext = &deviceSupport.vulkan12Features;
+
+            // Define & link 1_0 features to 1_2 features
+            deviceSupport.vulkanFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+            deviceSupport.vulkanFeatures2.pNext = &deviceSupport.vulkan11Features;
+
+            // Query the device supported features from Vk ( WIll populate the rest of the structure chain)
+            vkGetPhysicalDeviceFeatures2(*device, &deviceSupport.vulkanFeatures2);
+
+            bool supports10Features, supports11Features, supports12Features, supports13Features, supports14Features = false;
+
+            auto t = deviceSupport.vulkanFeatures2.features;
+
+
+            // Iterate over the user-required features and ensure they are supported
+            auto const uFeatureChain = reinterpret_cast<VkBool32 const*>(&deviceSupport.vulkanFeatures2);
+            size_t count = sizeof(VkPhysicalDeviceFeatures) / sizeof(VkBool32);
+
+            for (size_t i = 0; i < count; ++i) {
+                if (uFeatureChain[i]) {}
+            }
         }
+
+        auto const* flags = reinterpret_cast<VkBool32 const*>(&reqFeatures.vulkanFeatures2);
+        size_t count = sizeof(VkPhysicalDeviceFeatures) / sizeof(VkBool32);
+
+        for (size_t i = 0; i < count; ++i) {
+            if (flags[i]) {
+                // Feature enabled
+            }
+        }
+
+
+        // Cannot provide any real enumeration or tests on VkPhysicalDevice and similar structures, they are a C API that doesnt expose its members
+        // Need dynamic reflection system (may be able to pull it off CXX26 reflection) to access member types
+
+
 
     }
 }
