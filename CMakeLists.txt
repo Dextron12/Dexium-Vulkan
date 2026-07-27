@@ -27,14 +27,6 @@ option(DX_LayerFeatures "Enable Vulkan layers & reporting back to a configured E
 # Enable/Disable Message logging features
 option(DX_ErrorLogging "Enable Error Logging support throughout the engine" ON)
 
-# Build tinyxml2 lib for tooling and project interface (Cannot read xml file otherwise)
-option(DX_USE_XML "Build tinyxml2 as a internal library that can be used for tooling features" OFF)
-
-# -- Developer tools options --
-# --
-# -- VkGenerator
-option(DX_TOOL_VkGenerator " Build the CLI tool to compile a header script containing Vulkan structure metadata" ON)
-
 
 # -- Test Application Compilation --
 option(DX_TEST_APPLICATION "Build the Dexium Engine test application" ON)
@@ -79,18 +71,6 @@ if (DX_ErrorLogging)
     message(STATUS "Message logging and output enabled")
 endif()
 
-if (DX_USE_XML)
-    add_subdirectory(3rd_party/tinyxml2)
-    target_compile_definitions(Dexium PUBLIC DX_USE_XML=1)
-    target_link_libraries(Dexium PUBLIC tinyxml2)
-endif()
-
-
-# Optionally compile dev tools
-if (DX_TOOL_VkGenerator)
-    add_subdirectory(tools/VkGenerator)
-    message("Compiling VkGenerator CLI")
-endif()
 
 # OPTIONALLY compile the Test application found in ./Test_Application
 if (DX_TEST_APPLICATION)
