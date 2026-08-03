@@ -9,27 +9,8 @@
 #include <memory>
 #include <unordered_map>
 
-
-// Engine Utils:
-#include <core/Error.hpp>
-#include <core/VFS.hpp>
-
 // Engine API
 #include <core/Layer.hpp>
-
-// Rendering (Backend) API
-#ifdef DX_VK_BACKEND
-#include <backend/VKInstance.hpp>
-#else
-#error "DX_VK_BACKEND disabled, No other backends currently supported!"
-#endif
-
-
-
-// Backend specifications
-#ifdef DX_VK_BACKEND
-#include <backend/window.hpp>
-#endif
 
 namespace Dexium {
     class AppEngine {
@@ -46,11 +27,6 @@ namespace Dexium {
         // Unload the Layer and all of its associated data
         void unloadLayer(std::string_view layerName);
 
-        // Attach a new window context onto the engine
-        void attachWindow(std::unique_ptr<Backends::WindowContext> windowPtr);
-
-        Backends::WindowContext* getWindowCtx() const;
-
         void run();
 
         void shutdown();
@@ -59,8 +35,6 @@ namespace Dexium {
         std::unordered_map<std::string, std::unique_ptr<Core::ApplicationLayer>> m_engineLayers;
 
         bool m_appState = true;
-
-        std::unique_ptr<Backends::WindowContext> m_Window = nullptr;
     };
 }
 

@@ -74,6 +74,6 @@ endif()
 
 # OPTIONALLY compile the Test application found in ./Test_Application
 if (DX_TEST_APPLICATION)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Test_Application)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test_project)
     message(STATUS "Compiling Test Application")
 endif()

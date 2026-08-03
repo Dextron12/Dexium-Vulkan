@@ -83,16 +83,7 @@ namespace Dexium {
         }
     }
 
-
-    Backends::WindowContext* AppEngine::getWindowCtx() const {
-        return m_Window.get();
-    }
-
     void AppEngine::run() {
-        if (m_Window == nullptr) {
-            std::cout << "No Window found!" << std::endl;
-            return;
-        }
 
         while (m_appState) {
             //Itertate through the layers and execute them
@@ -132,15 +123,11 @@ namespace Dexium {
 
                 ptr->onShutdown();
             }
-            if (m_Window != nullptr) {
+            /*if (m_Window != nullptr) {
                 if (glfwWindowShouldClose(m_Window->window)) {
                     ptr->onShutdown();
                 }
-            }
+            }*/
         }
-    }
-
-    void AppEngine::attachWindow(std::unique_ptr<Backends::WindowContext> windowPtr) {
-        m_Window = std::move(windowPtr);
     }
 }
