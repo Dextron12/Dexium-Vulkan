@@ -9,7 +9,7 @@
 
 #include <core/ApplicationInfo.hpp>
 
-#include <vector>
+#include <RenderBackends/Vulkan/include/VkExtensionResult.hpp>
 
 
 // Forward declare GLFWwindow (IF USe GLFW WM)
@@ -29,17 +29,6 @@ namespace Dexium::Vulkan {
     // Callback function for validation layers(default)
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagBitsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* pCallback, void* pUserData);
 
-// Being renamed to DX_PLATFORM_GLFW
-#ifdef DX_WM_GLFW
-    struct DX_PLATFORM_GLFW_EXT_Instance {
-        size_t noEnabledEXT = 0; // The number of GLFW extensions that are required
-        size_t noFailedEXT = 0; // Number of extensions that are NOT supported by the VK driver
-
-        std::vector<const char*> unsupportedEXT; // List of GLFW EXT that the Vk driver doesn't support
-        std::vector<const char*> enabledEXT; // List of GLFW extensions that SHOULD be added to instance::extensions to enable them
-    };
-#endif
-
     class Instance {
     public:
         Instance(ApplicationInfo appInfo);
@@ -52,7 +41,7 @@ namespace Dexium::Vulkan {
         std::vector<const char*> enableValidationLayers(const std::vector<const char*>& reqValdiationLayers);
 
         // Validates extension support and enables it if supported. NOTE: extensions can only be enabled before instance creation (Instance::createInstance)
-        DX_PLATFORM_GLFW_EXT_Instance enableExtensions(const std::vector<const char*>& extNames);
+        DX_EXT_PACK enableExtensions(const std::vector<const char*>& extNames);
 
         bool createInstance();
         VkInstance get() const;

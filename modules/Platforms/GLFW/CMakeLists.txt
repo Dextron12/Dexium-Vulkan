@@ -11,7 +11,7 @@ add_library(Dexium.Window.GLFW STATIC
 )
 
 target_include_directories(Dexium.Window.GLFW PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    ${CMAKE_SOURCE_DIR}/modules/
 )
 
 #Lionk library

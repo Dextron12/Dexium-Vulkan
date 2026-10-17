@@ -3,7 +3,7 @@
 //
 
 
-#include <Instance.hpp>
+#include <RenderBackends/Vulkan/include/Instance.hpp>
 
 #include <util/Logger.hpp>
 #include <core/ServiceLocator.hpp>
@@ -206,8 +206,8 @@ namespace Dexium::Vulkan {
 
     // Being renamed to DX_PLATFORM_GLFW
 #ifdef DX_WM_GLFW
-    DX_PLATFORM_GLFW_EXT_Instance Instance::enableExtensions(const std::vector<const char*>& extNames) {
-        DX_PLATFORM_GLFW_EXT_Instance res;
+    DX_EXT_PACK Instance::enableExtensions(const std::vector<const char*>& extNames) {
+        DX_EXT_PACK res;
         // Validate each extension from host driver extension (Instance::availableEXTProperties)
         for (const auto& extName : extNames) {
             bool found = false;

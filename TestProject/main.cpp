@@ -1,12 +1,12 @@
 
 #ifdef DX_WM_GLFW
-#include <GLFWLoader.hpp>
-#include <GLFWindow.hpp>
+#include <Platforms/GLFW/include/GLFWLoader.hpp>
+#include <Platforms/GLFW/include/GLFWindow.hpp>
 #endif
 
 #ifdef DX_RM_VULKAN
-#include <Instance.hpp>
-#include <Device.hpp>
+#include <RenderBackends/Vulkan/include/Instance.hpp>
+#include <RenderBackends/Vulkan/include/Device.hpp>
 #endif
 
 #include <core/ApplicationInfo.hpp>

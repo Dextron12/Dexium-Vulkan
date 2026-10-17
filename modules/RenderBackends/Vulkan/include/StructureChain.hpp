@@ -11,7 +11,7 @@
 // This is a custom implementation of the Vulkan CPP StructureChain feature
 // Made custom to eventually integerate into custom metadata
 
-#include <VkStructureTraits.hpp> // Vulkan structure metadata: Generated from VkReflect (git@github.com:Dextron12/VkReflect)
+#include <RenderBackends/Vulkan/include/VkStructureTraits.hpp> // Vulkan structure metadata: Generated from VkReflect (git@github.com:Dextron12/VkReflect)
 
 namespace Dexium::Vulkan {
 

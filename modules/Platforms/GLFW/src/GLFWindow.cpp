@@ -2,7 +2,7 @@
 // Created by ethan on 3/9/26.
 //
 
-#include <GLFWindow.hpp>
+#include <Platforms/GLFW/include/GLFWindow.hpp>
 
 #include <util/Logger.hpp>
 

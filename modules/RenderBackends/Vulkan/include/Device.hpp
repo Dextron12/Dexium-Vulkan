@@ -5,7 +5,7 @@
 #ifndef DEXIUM_VULKAN2_DEVICE_HPP
 #define DEXIUM_VULKAN2_DEVICE_HPP
 
-#include <Instance.hpp>
+#include <RenderBackends/Vulkan/include/Instance.hpp>
 
 namespace Dexium::Vulkan {
 

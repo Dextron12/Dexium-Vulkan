@@ -13,7 +13,7 @@ add_library(Dexium.RM.Vulkan STATIC
 )
 
 target_include_directories(Dexium.RM.Vulkan PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    ${PROJECT_SOURCE_DIR}/modules/
 )
 
 target_link_libraries(Dexium.RM.Vulkan PUBLIC
