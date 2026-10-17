@@ -11,33 +11,62 @@
 
 #include <vector>
 
+
+// Forward declare GLFWwindow (IF USe GLFW WM)
+#ifdef DX_WM_GLFW
+class GLFWwindow;
+#endif
+
 namespace Dexium::Vulkan {
 
+    // Utility helper fn to examine a VkResult and return a human-readable error-code
+    std::string inspectVkResult(const VkResult& res);
+
+
+    // Forward declare for Dx::Vulkan::Device
+    class Device;
 
     // Callback function for validation layers(default)
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagBitsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* pCallback, void* pUserData);
 
+// Being renamed to DX_PLATFORM_GLFW
+#ifdef DX_WM_GLFW
+    struct DX_PLATFORM_GLFW_EXT_Instance {
+        size_t noEnabledEXT = 0; // The number of GLFW extensions that are required
+        size_t noFailedEXT = 0; // Number of extensions that are NOT supported by the VK driver
+
+        std::vector<const char*> unsupportedEXT; // List of GLFW EXT that the Vk driver doesn't support
+        std::vector<const char*> enabledEXT; // List of GLFW extensions that SHOULD be added to instance::extensions to enable them
+    };
+#endif
 
     class Instance {
     public:
         Instance(ApplicationInfo appInfo);
 
 #if defined(DX_WM_GLFW)
-        // Checks GLFW surface extension requirements with Vulkan driver, returns a vec of unsupported extensions(if any)
-        std::vector<const char*> checkGLFWExtensions();
+        [[nodiscard]] VkSurfaceKHR createWindowSurface(GLFWwindow* window);
 #endif
 
         // Validates and enabled provided validation layers, return s a vec of unsupported layer names (if any)
         std::vector<const char*> enableValidationLayers(const std::vector<const char*>& reqValdiationLayers);
 
+        // Validates extension support and enables it if supported. NOTE: extensions can only be enabled before instance creation (Instance::createInstance)
+        DX_PLATFORM_GLFW_EXT_Instance enableExtensions(const std::vector<const char*>& extNames);
+
         bool createInstance();
         VkInstance get() const;
+
+        // Query available physical devices
+        std::vector<VkPhysicalDevice> enumeratePhysicalDevices();
+
+
 
     private:
         ApplicationInfo appInfo;
         VkInstance instance = VK_NULL_HANDLE;
 
-        std::vector<const char*> extensions;
+        std::vector<const char*> extensions; // extensions that are to be enabled at createInstance
         std::vector<VkExtensionProperties> availableEXTProperties;
 
         std::vector<VkLayerProperties> availableLayers; // Queried by driver

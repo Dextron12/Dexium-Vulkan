@@ -1,93 +1,86 @@
 
-#include <fmt/base.h>
-#include <fmt/color.h>
-#include <fmt/chrono.h>
-
+#ifdef DX_WM_GLFW
 #include <GLFWLoader.hpp>
+#include <GLFWindow.hpp>
+#endif
 
+#ifdef DX_RM_VULKAN
+#include <Instance.hpp>
+#include <Device.hpp>
+#endif
+
+#include <core/ApplicationInfo.hpp>
+#include <core/VersionControl.hpp>
 
 #include <util/Logger.hpp>
 
-#include <core/ServiceLocator.hpp>
+#include <fmt/base.h>
+#include <fmt/format.h>
 
-#include "core/FileSystem.hpp"
-
-#include <GLFWindow.hpp>
-
-#include <Instance.hpp>
-
-#include "core/VersionControl.hpp"
 
 int main() {
-    fmt::print(stderr, fg(fmt::color::crimson), "Hello World!\n");
+
+    auto& services = Dexium::Core::serviceLocator;
+    services.add<Logger>();
+    services.get<Logger>().connectSink((std::make_unique<StderrSink>()));
 
     GLFWLoader glfwLoader;
     glfwLoader.load();
 
-    Dexium::Core::Window window(glfwLoader, "Test Window", 1080, 720);
-
     if (!glfwLoader.isLoaded()) {
-        fmt::print(stderr, fg(fmt::color::crimson), "Failed to load GLFW\n");
+        const char* err = nullptr;
+        glfwGetError(&err);
+        TraceLog(LogLevel::FATAL, "GLFW failed to initialise!\nStatus: {}", err);
+        return EXIT_FAILURE;
     }
 
-    auto& services = Dexium::Core::serviceLocator;
-    services.add<Logger>();
+    Dexium::Platform::GLFW::Window window(glfwLoader, "Dx Test Project", 1080, 720);
 
-    services.add<Dexium::Core::Filesystem>();
-    auto& vfs = services.get<Dexium::Core::Filesystem>();
-    // Change path from out of build dir to main
-    vfs.setWorkingDir(vfs.getWorkingDir().parent_path().parent_path());
+    Dexium::Vulkan::ApplicationInfo appInfo(window, Dexium::Core::VersionControl{0,0,0}.makeVersion());
 
-    auto& logger = services.get<Logger>();
-    logger.connectSink(std::make_unique<StderrSink>());
+    Dexium::Vulkan::Instance instance(appInfo);
 
-    TraceLog(LogLevel::DEBUG, "Hello, World!");
-
-
-    TraceLog(LogLevel::INFO, "ExecPath: {}", vfs.getExecDir().c_str());
-    TraceLog(LogLevel::INFO, "Working path: {}", vfs.getWorkingDir().c_str());
-
-    Formatter mat; mat.showLocation = true;
-    TraceLogFormat(LogLevel::WARN, mat, "Hello {} testing land!", "from");
-
-    //Logger logger;
-    //logger.connectSink(std::make_unique<StderrSink>());
-
-    auto t = std::source_location::current();
-
-    logger.write(LogLevel::INFO, std::source_location::current(), "This is an info log");
-    logger.write(LogLevel::DEBUG, std::source_location::current(), "This is a debug log");
-    logger.write(LogLevel::TRACE, std::source_location::current(), "This is a trace log");
-
-    logger.write(LogLevel::WARN, mat, std::source_location::current(), "This is a warn log");
-
-    logger.write(LogLevel::ERROR, std::source_location::current(), "This is an error log");
-    logger.write(LogLevel::FATAL, std::source_location::current(), "This is fatal log");
-
-    Dexium::Core::VersionControl ver{0,0,20};
-    Dexium::Vulkan::ApplicationInfo appInfo{"Test Window", Dexium::Core::WindowRatio{.width = 1080,.height = 720}, ver.makeVersion()};
-    //Dexium::Vulkan::Instance instance(appInfo);
-
-    Dexium::Vulkan::Instance instance({"Test Window", Dexium::Core::WindowRatio{.width = 1080,.height = 720}, Dexium::Core::VersionControl{0,0,20}.makeVersion()});
-
-    auto unsupportedExtensions = instance.checkGLFWExtensions();
-    for (auto& extName : unsupportedExtensions) {
-        TraceLog(LogLevel::WARN, "This Vulkan driver does not support the GLFW extension '{}'", extName);
+    auto platformEXT = Dexium::Platform::GLFW::QueryVulkanInstanceExtensions();
+    for (const auto& ext : platformEXT) {
+        fmt::print("GLW requested extension: '{}'\n", ext);
     }
 
-    auto unsupportedLayers = instance.enableValidationLayers({"VK_LAYER_KHRONOS_validation"});
-    for (auto& layerName : unsupportedLayers) {
-        TraceLog(LogLevel::WARN, "This Vulkan driver does not support the validation layer '{}'", layerName);
-    }
+    instance.enableExtensions(Dexium::Platform::GLFW::QueryVulkanInstanceExtensions());
 
-    instance.createInstance();
 
-    while (!glfwWindowShouldClose(window.getWindow())) {
-        glfwPollEvents();
-
-        if (glfwGetKey(window.getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window.getWindow(), GL_TRUE);
+    // Setup the VK validation layer & debugger
+    const auto& uLayers = instance.enableValidationLayers({"VK_LAYER_KHRONOS_validation"});
+    if (!uLayers.empty()) {
+        for (const auto& layer : uLayers) {
+            TraceLog(LogLevel::FATAL, "Vk driver does not support the requested validation layer: '{}'", layer);
         }
+        return EXIT_FAILURE;
     }
+
+    // Create instance
+    if (!instance.createInstance()) {
+        TraceLog(LogLevel::FATAL, "Failed to create a VkInstance. Aborting...)");
+        return EXIT_FAILURE;
+    }
+
+    // Set up a VkSurface for the window
+    auto surface = instance.createWindowSurface(window.getWindow());
+    if (surface == nullptr) {
+        TraceLog(LogLevel::FATAL, "Failed to create a window surface!");
+        return EXIT_FAILURE;
+    }
+
+    const auto& deviceList = instance.enumeratePhysicalDevices();
+
+    // Skip device selection criteria, if ONLY one device found, must still pass engine min requirements
+    auto pDev = Dexium::Vulkan::Device(nullptr);
+    if (deviceList.size() > 1) {
+        TraceLog(LogLevel::WARN, "No device selection process implemented yet. Cannot automatically deduce device selection");
+        return EXIT_FAILURE;
+    } else if (deviceList.size() == 1) {
+        pDev = Dexium::Vulkan::Device(deviceList[0]);
+    }
+
+
 
 }
