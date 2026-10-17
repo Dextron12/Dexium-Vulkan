@@ -4,13 +4,14 @@
 
 #ifndef DEXIUM_STRUCTURECHAIN_HPP
 #define DEXIUM_STRUCTURECHAIN_HPP
+
 #include <type_traits>
-#include <bits/locale_facets_nonio.h>
-#include <fmt/base.h>
 
 
 // This is a custom implementation of the Vulkan CPP StructureChain feature
 // Made custom to eventually integerate into custom metadata
+
+#include <VkStructureTraits.hpp> // Vulkan structure metadata: Generated from VkReflect (git@github.com:Dextron12/VkReflect)
 
 namespace Dexium::Vulkan {
 
@@ -43,6 +44,16 @@ namespace Dexium::Vulkan {
         const U* get() const {
             static_assert(std::is_same_v<T, U>, "Requested type is not present in StructureChain");
             return &value;
+        }
+
+        void relink() noexcept {
+            value.pNext = nullptr;
+            value.sType = VkStructureTraits<T>::sType;
+        }
+
+        template<typename Fn>
+        void compareStructure(const StructureChain& other, Fn&& fn) const {
+            forEachMemberPair(value, other.value, fn);
         }
 
     private:
@@ -115,9 +126,15 @@ namespace Dexium::Vulkan {
         }
 
         void relink() noexcept {
-            //value.sType = VulkanStructureTraits<T>::sType; // Prevents sTypes changing or propagating through chain when chain is copied/moved
+            value.sType = VkStructureTraits<T>::sType; // Prevents user-modified sType properagting through a copy
             value.pNext = next.head();
             next.relink();
+        }
+
+        template<typename Fn>
+        void compareStructure(const StructureChain& other, Fn&& fn) const {
+            forEachMemberPair(value, other.value, fn);
+            next.compareStructure(other.next, fn);
         }
 
     private:
