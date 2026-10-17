@@ -7,10 +7,12 @@
 
 
 #include <cstdint>
-#include <math.h>
 #include <string>
 
-#include <tuple>
+#include <fmt/base.h>
+
+
+#include <core/IWindow.hpp>
 
 
 
@@ -62,6 +64,25 @@ namespace Dexium::Vulkan {
                 .engineVersion = VK_MAKE_VERSION(0,20,0),
                 .apiVersion = VK_MAKE_API_VERSION(0,1,4,0)      // API version isn't garuanted, device may support a lower version
             };
+        }
+
+        ApplicationInfo(const IWindow& windowInterface, uint32_t appVersion) {
+            // Check Vk API supported version
+            //NOTE: This is the version the driver supports, but indiivdual devices may support a different version
+            uint32_t apiVersion = VK_API_VERSION_1_0;
+            if (vkEnumerateInstanceVersion(&apiVersion) != VK_SUCCESS) {
+                fmt::print("FATAL_CORE_DUMP --> Cannot instantiate Vulkan driver version");
+                return;
+            }
+
+            appInfo = VkApplicationInfo{
+                .pApplicationName = windowInterface.getWindowTitle().data(),
+                .applicationVersion = appVersion,
+                .pEngineName = "Dexium-Framework",
+                .engineVersion = VK_MAKE_VERSION(0,20,0),
+                .apiVersion = apiVersion
+            };
+
         }
 
         VkApplicationInfo appInfo;

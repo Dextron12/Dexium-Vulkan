@@ -22,6 +22,10 @@ public:
         return m_height;
     }
 
+    std::string_view getWindowTitle() const {
+        return m_windowTitle;
+    }
+
 protected:
     std::string m_windowTitle;
 

@@ -2,8 +2,8 @@
 // Created by ethan on 3/9/26.
 //
 
-#ifndef DEXIUM_VULKAN2_GLFWINDOW_HPP
-#define DEXIUM_VULKAN2_GLFWINDOW_HPP
+#ifndef DX_PLATFORM_GLFW_Window_HPP
+#define DX_PLATFORM_GLFW_Window_HPP
 
 
 // Ln: 736(mains.cpp) // Load GLFW
@@ -15,17 +15,24 @@
 
 #include <vector>
 
-namespace Dexium::Core {
-    class Window : IWindow {
-    private:
-        struct glfwExtensions {
-            const char** extensions;
-            uint32_t count;
-        };
+namespace Dexium::Platform::GLFW {
+
+#ifdef DX_RM_VULKAN
+    // Request GLFW required extensions
+    std::vector<const char*> QueryVulkanInstanceExtensions();
+
+
+#endif
+
+    class Window : public IWindow {
     public:
-        //GLFWwindow(const ILoader& loader, const char* windowTitle, int windowWidth, int windowHeight)
-        //    : IWindow(windowTitle, windowWidth, windowHeight) {}
         explicit Window(const ILoader& loader, const char* windowTitle, int windowWidth, int windowHeight);
+
+        Window(const Window&) = delete;
+        Window& operator=(const Window&) = delete;
+
+        Window(Window&&) = delete;
+        Window& operator=(Window&&) = delete;
 
         ~Window() override;
 
@@ -33,8 +40,6 @@ namespace Dexium::Core {
 
         // Set a window size callback
         void setWindowSizeCallback(GLFWwindowsizefun func);
-
-        glfwExtensions getRequiredExtensions();
 
     private:
         GLFWwindow* m_window;
@@ -46,4 +51,4 @@ namespace Dexium::Core {
     };
 }
 
-#endif //DEXIUM_VULKAN2_GLFWINDOW_HPP
+#endif //DX_PLATFORM_GLFW_Window_HPP

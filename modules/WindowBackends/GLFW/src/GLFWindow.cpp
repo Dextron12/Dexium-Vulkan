@@ -11,7 +11,14 @@
 //IWindow dtor definition
 IWindow::~IWindow() = default;
 
-namespace Dexium::Core {
+namespace Dexium::Platform::GLFW {
+    std::vector<const char*> QueryVulkanInstanceExtensions() {
+        uint32_t extCount = 0;
+        const char** ext = glfwGetRequiredInstanceExtensions(&extCount);
+
+        return {ext, ext + extCount};
+    }
+
     Window::Window(const ILoader& loader, const char* windowTitle, int windowWidth, int windowHeight)
         : IWindow(windowTitle, windowWidth, windowHeight) {
 
@@ -72,14 +79,6 @@ namespace Dexium::Core {
         }
 
     }
-
-#if defined(DX_RM_VULKAN)
-    Core::Window::glfwExtensions Window::getRequiredExtensions() {
-        uint32_t glfwExtCount = 0;
-        //return glfwGetRequiredInstanceExtensions(&glfwExtCount);
-        return {glfwGetRequiredInstanceExtensions(&glfwExtCount), glfwExtCount};
-    }
-#endif
 }
 
 #endif
