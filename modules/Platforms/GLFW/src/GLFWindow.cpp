@@ -6,7 +6,7 @@
 
 #include <util/Logger.hpp>
 
-#if defined(DX_WM_GLFW)
+#if defined(DX_PLATFORM_GLFW)
 
 //IWindow dtor definition
 IWindow::~IWindow() = default;

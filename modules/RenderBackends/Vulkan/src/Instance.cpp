@@ -2,17 +2,16 @@
 // Created by ethan on 11/9/26.
 //
 
-
 #include <RenderBackends/Vulkan/include/Instance.hpp>
+
+#ifdef DX_PLATFORM_GLFW
+#include <GLFW/glfw3.h>
+#endif
 
 #include <util/Logger.hpp>
 #include <core/ServiceLocator.hpp>
 
 #include <algorithm>
-
-#if defined(DX_WM_GLFW)
-#include <GLFW/glfw3.h>
-#endif
 
 namespace Dexium::Vulkan {
 
@@ -203,9 +202,6 @@ namespace Dexium::Vulkan {
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
     }
-
-    // Being renamed to DX_PLATFORM_GLFW
-#ifdef DX_WM_GLFW
     DX_EXT_PACK Instance::enableExtensions(const std::vector<const char*>& extNames) {
         DX_EXT_PACK res;
         // Validate each extension from host driver extension (Instance::availableEXTProperties)
@@ -232,7 +228,6 @@ namespace Dexium::Vulkan {
 
         return res;
     }
-#endif
 
     std::vector<const char*> Instance::enableValidationLayers(const std::vector<const char*>& requestedLayers) {
 
@@ -315,7 +310,7 @@ namespace Dexium::Vulkan {
     }
 
 
-#ifdef DX_WM_GLFW
+#ifdef DX_PLATFORM_GLFW
     VkSurfaceKHR Instance::createWindowSurface(GLFWwindow* window) {
         VkSurfaceKHR surface = VK_NULL_HANDLE;
 

@@ -13,7 +13,7 @@
 
 
 // Forward declare GLFWwindow (IF USe GLFW WM)
-#ifdef DX_WM_GLFW
+#ifdef DX_PLATFORM_GLFW
 class GLFWwindow;
 #endif
 
@@ -24,7 +24,7 @@ namespace Dexium::Vulkan {
 
 
     // Forward declare for Dx::Vulkan::Device
-    class Device;
+    class physicalDevice;
 
     // Callback function for validation layers(default)
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagBitsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* pCallback, void* pUserData);
@@ -33,7 +33,7 @@ namespace Dexium::Vulkan {
     public:
         Instance(ApplicationInfo appInfo);
 
-#if defined(DX_WM_GLFW)
+#if defined(DX_PLATFORM_GLFW)
         [[nodiscard]] VkSurfaceKHR createWindowSurface(GLFWwindow* window);
 #endif
 
