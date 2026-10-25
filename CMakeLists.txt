@@ -11,9 +11,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Options
 # -----------------------------------------------
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # -- Window backend sub-systems
 # -- <GLFW>(Default Dexium Window Manager)
-option(DX_USE_GLFW "Use GLFW as the Window Manager"
+option(DX_PLATFORM_GLFW "Use GLFW as the Platform Manager"
         ON
 )
 
@@ -61,7 +63,7 @@ add_subdirectory(modules)
 
 # Connect selected modules to Dexium
 
-if (DX_USE_GLFW)
+if (DX_PLATFORM_GLFW)
     target_link_libraries(Dexium PUBLIC Dexium.Window.GLFW)
     message(STATUS "GLFW WM compiled into Dexium")
 endif()

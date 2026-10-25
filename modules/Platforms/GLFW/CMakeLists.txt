@@ -21,4 +21,4 @@ target_link_libraries(Dexium.Window.GLFW PUBLIC
 )
 
 # Define CPP macro
-target_compile_definitions(Dexium.Window.GLFW PUBLIC DX_WM_GLFW=1)
+target_compile_definitions(Dexium.Window.GLFW PUBLIC DX_PLATFORM_GLFW=1)

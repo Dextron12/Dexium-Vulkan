@@ -8,7 +8,7 @@ endif()
 
 # -- Window Manager(WM) modules
 # -- GLFW(Default WM)
-if(DX_USE_GLFW)
+if(DX_PLATFORM_GLFW)
     add_subdirectory(Platforms/GLFW)
 endif()
 
