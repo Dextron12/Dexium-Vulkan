@@ -1,5 +1,4 @@
-
-#ifdef DX_WM_GLFW
+#ifdef DX_PLATFORM_GLFW
 #include <Platforms/GLFW/include/GLFWLoader.hpp>
 #include <Platforms/GLFW/include/GLFWindow.hpp>
 #endif
@@ -40,13 +39,12 @@ int main() {
 
     Dexium::Vulkan::Instance instance(appInfo);
 
-    auto platformEXT = Dexium::Platform::GLFW::QueryVulkanInstanceExtensions();
-    for (const auto& ext : platformEXT) {
-        fmt::print("GLW requested extension: '{}'\n", ext);
+    const auto& res = instance.enableExtensions(Dexium::Platform::GLFW::QueryVulkanInstanceExtensions());
+    if (res.noFailedEXT > 0) {
+        for (const auto& ext : res.unsupportedEXT) {
+            TraceLog(LogLevel::ERROR, "No support for extension '{}'", ext);
+        }
     }
-
-    instance.enableExtensions(Dexium::Platform::GLFW::QueryVulkanInstanceExtensions());
-
 
     // Setup the VK validation layer & debugger
     const auto& uLayers = instance.enableValidationLayers({"VK_LAYER_KHRONOS_validation"});
@@ -73,13 +71,17 @@ int main() {
     const auto& deviceList = instance.enumeratePhysicalDevices();
 
     // Skip device selection criteria, if ONLY one device found, must still pass engine min requirements
-    auto pDev = Dexium::Vulkan::Device(nullptr);
+    auto pDev = Dexium::Vulkan::physicalDevice(nullptr);
     if (deviceList.size() > 1) {
         TraceLog(LogLevel::WARN, "No device selection process implemented yet. Cannot automatically deduce device selection");
         return EXIT_FAILURE;
     } else if (deviceList.size() == 1) {
-        pDev = Dexium::Vulkan::Device(deviceList[0]);
+        pDev = Dexium::Vulkan::physicalDevice(deviceList[0]);
     }
+
+    auto qf = pDev.getDefaultQueueFamily(surface);
+
+    fmt::print("");
 
 
 
